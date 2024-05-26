@@ -71,7 +71,7 @@ var tmpl = template.Must(template.ParseFiles("static/index.html"))
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// Load all baked goods images from the static/images directory.
-	matches, err := filepath.Glob(filepath.Join("static", "images", "baked_goods_*.jpeg"))
+	matches, err := filepath.Glob(filepath.Join("static", "images", "ingridients*.webp"))
 	if err != nil {
 		log.Printf("Error loading baked goods images: %v", err)
 	}
