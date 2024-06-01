@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -15,8 +17,7 @@ import (
 	"github.com/tmc/langchaingo/schema"
 )
 
-
-var apiKey = "<api>"
+var apiKey = "AIzaSyCjolnfa-0MENwsHohybMgE5Hr5X0wGQo0"
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "usage: web [options]\n")
@@ -30,10 +31,25 @@ var (
 
 func generateHandler(w http.ResponseWriter, r *http.Request, llm *googleai.GoogleAI) {
 
-	image, prompt := r.FormValue("chosen-image"), r.FormValue("prompt")
-	imgData, err := os.ReadFile(filepath.Join("static", "images", filepath.Base(image)))
+	prompt := r.FormValue("prompt")
+	file, header, err := r.FormFile("chosen-image")
 	if err != nil {
-		log.Printf("Unable to read image %s: %v\n", image, err)
+		log.Printf("Unable to read image %s %v\n", header.Filename, err)
+		http.Error(w, "Error: unable to generate content", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	imgData := bytes.NewBuffer(nil)
+	if _, err := io.Copy(imgData, file); err != nil {
+		log.Printf("Unable to read image %v\n", err)
+		http.Error(w, "Error: unable to generate content", http.StatusInternalServerError)
+		return
+	}
+
+	// imgData, err := os.ReadFile(filepath.Join("static", "images", "ingridients_2.jpeg"))
+	if err != nil {
+		log.Printf("Unable to read image %v\n", err)
 		http.Error(w, "Error: unable to generate content", http.StatusInternalServerError)
 		return
 	}
@@ -42,7 +58,7 @@ func generateHandler(w http.ResponseWriter, r *http.Request, llm *googleai.Googl
 		{
 			Role: schema.ChatMessageTypeHuman,
 			Parts: []llms.ContentPart{
-				llms.BinaryPart("image/jpeg", imgData),
+				llms.BinaryPart("image/jpeg", imgData.Bytes()),
 				llms.TextPart(prompt),
 			},
 		},
@@ -71,7 +87,7 @@ var tmpl = template.Must(template.ParseFiles("static/index.html"))
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// Load all baked goods images from the static/images directory.
-	matches, err := filepath.Glob(filepath.Join("static", "images", "ingridients*.webp"))
+	matches, err := filepath.Glob(filepath.Join("static", "images"))
 	if err != nil {
 		log.Printf("Error loading baked goods images: %v", err)
 	}

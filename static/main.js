@@ -16,3 +16,20 @@ form.onsubmit = async (ev) => {
     request.send(data);
     return false;
 }
+function readURL(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+  
+      reader.onload = function (e) {
+        var img = document.querySelector("#img");
+        img.src = reader.result;
+        img.style.display="inline";
+      };
+  
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+function hideImg() {
+    document.getElementById("img")
+                      .style.display = "none";
+   }
