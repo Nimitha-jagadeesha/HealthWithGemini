@@ -17,7 +17,7 @@ import (
 	"github.com/tmc/langchaingo/schema"
 )
 
-var apiKey = "<apiKey>"
+var apiKey = "<apikey>"
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "usage: web [options]\n")
